@@ -20,6 +20,7 @@ urlpatterns = [
         path('core/', include('apps.core.urls')),
         path('pedagogico/', include('apps.pedagogico.urls')),
         path('administrativo/', include('apps.administrativo.urls')),
+        path('planejamentos/', include('apps.planejamentos.urls')),
         path('auramind/', include('apps.auramind.urls')),
     ])),
 ]

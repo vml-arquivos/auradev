@@ -4,7 +4,7 @@ Admin configuration for Pedagogico app.
 from django.contrib import admin
 from .models import (
     Turma, Aluno, PlanejamentoAnual, UnidadeTematica,
-    RegistroDeAula, Avaliacao, NotaAluno
+    RegistroDeAula, Avaliacao, NotaAluno, Tarefa, SubmissaoTarefa
 )
 
 
@@ -54,3 +54,19 @@ class NotaAlunoAdmin(admin.ModelAdmin):
     list_display = ['aluno', 'avaliacao', 'valor']
     list_filter = ['avaliacao']
     search_fields = ['aluno__user__first_name']
+
+
+@admin.register(Tarefa)
+class TarefaAdmin(admin.ModelAdmin):
+    list_display = ['titulo', 'turma', 'professor', 'status', 'data_entrega']
+    list_filter = ['status', 'data_entrega', 'turma']
+    search_fields = ['titulo', 'descricao', 'professor__first_name']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(SubmissaoTarefa)
+class SubmissaoTarefaAdmin(admin.ModelAdmin):
+    list_display = ['tarefa', 'aluno', 'status', 'nota', 'data_submissao']
+    list_filter = ['status', 'data_submissao', 'tarefa']
+    search_fields = ['aluno__user__first_name', 'tarefa__titulo']
+    readonly_fields = ['data_submissao']

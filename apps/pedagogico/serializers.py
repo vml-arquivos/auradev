@@ -4,7 +4,7 @@ Serializers for Pedagogico app.
 from rest_framework import serializers
 from .models import (
     Turma, Aluno, PlanejamentoAnual, UnidadeTematica,
-    RegistroDeAula, Avaliacao, NotaAluno
+    RegistroDeAula, Avaliacao, NotaAluno, Tarefa, SubmissaoTarefa
 )
 
 
@@ -87,3 +87,32 @@ class NotaAlunoSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class TarefaSerializer(serializers.ModelSerializer):
+    """Serializer for Tarefa model."""
+    professor_nome = serializers.CharField(source='professor.get_full_name', read_only=True)
+    
+    class Meta:
+        model = Tarefa
+        fields = [
+            'id', 'turma', 'titulo', 'descricao', 'professor',
+            'professor_nome', 'data_entrega', 'status',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class SubmissaoTarefaSerializer(serializers.ModelSerializer):
+    """Serializer for SubmissaoTarefa model."""
+    aluno_nome = serializers.CharField(source='aluno.user.get_full_name', read_only=True)
+    tarefa_titulo = serializers.CharField(source='tarefa.titulo', read_only=True)
+    
+    class Meta:
+        model = SubmissaoTarefa
+        fields = [
+            'id', 'tarefa', 'tarefa_titulo', 'aluno', 'aluno_nome',
+            'arquivo_enviado', 'texto_enviado', 'data_submissao',
+            'nota', 'feedback_professor', 'data_avaliacao', 'status'
+        ]
+        read_only_fields = ['id', 'data_submissao']

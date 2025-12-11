@@ -321,3 +321,121 @@ class NotaAluno(models.Model):
     
     def __str__(self):
         return f"{self.aluno.user.get_full_name()} - {self.avaliacao.titulo}: {self.valor}"
+
+
+class Tarefa(models.Model):
+    """
+    Model for Tasks/Assignments (estilo Google Classroom).
+    Representa uma atividade ou trabalho atribuído a uma turma.
+    """
+    STATUS_CHOICES = [
+        ('rascunho', _('Rascunho')),
+        ('publicada', _('Publicada')),
+        ('fechada', _('Fechada')),
+    ]
+    
+    turma = models.ForeignKey(
+        Turma,
+        on_delete=models.CASCADE,
+        related_name='tarefas',
+        verbose_name=_('Turma')
+    )
+    titulo = models.CharField(max_length=255, verbose_name=_('Título'))
+    descricao = models.TextField(verbose_name=_('Descrição'))
+    professor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='tarefas_criadas',
+        verbose_name=_('Professor')
+    )
+    data_entrega = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_('Data de Entrega')
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='rascunho',
+        verbose_name=_('Status')
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Criado em'))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_('Atualizado em'))
+    
+    class Meta:
+        verbose_name = _('Tarefa')
+        verbose_name_plural = _('Tarefas')
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.titulo} - {self.turma.nome}"
+
+
+class SubmissaoTarefa(models.Model):
+    """
+    Model for Task Submissions.
+    Registra a entrega de uma tarefa por um aluno.
+    """
+    STATUS_CHOICES = [
+        ('pendente', _('Pendente')),
+        ('entregue', _('Entregue')),
+        ('avaliada', _('Avaliada')),
+    ]
+    
+    tarefa = models.ForeignKey(
+        Tarefa,
+        on_delete=models.CASCADE,
+        related_name='submissoes',
+        verbose_name=_('Tarefa')
+    )
+    aluno = models.ForeignKey(
+        Aluno,
+        on_delete=models.CASCADE,
+        related_name='submissoes_tarefas',
+        verbose_name=_('Aluno')
+    )
+    arquivo_enviado = models.FileField(
+        upload_to='submissoes_tarefas/',
+        blank=True,
+        null=True,
+        verbose_name=_('Arquivo Enviado')
+    )
+    texto_enviado = models.TextField(
+        blank=True,
+        verbose_name=_('Texto Enviado')
+    )
+    data_submissao = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_('Data de Submissão')
+    )
+    nota = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name=_('Nota')
+    )
+    feedback_professor = models.TextField(
+        blank=True,
+        verbose_name=_('Feedback do Professor')
+    )
+    data_avaliacao = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_('Data de Avaliação')
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pendente',
+        verbose_name=_('Status')
+    )
+    
+    class Meta:
+        verbose_name = _('Submissão de Tarefa')
+        verbose_name_plural = _('Submissões de Tarefas')
+        unique_together = ['tarefa', 'aluno']
+        ordering = ['-data_submissao']
+    
+    def __str__(self):
+        return f"Submissão de {self.aluno.user.get_full_name()} para {self.tarefa.titulo}"

@@ -2,6 +2,7 @@
 import requests # NOVO
 import logging # NOVO
 from django.conf import settings # NOVO
+from django.utils import timezone # NOVO
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -12,12 +13,12 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 
 from .models import (
     Turma, Aluno, PlanejamentoAnual, UnidadeTematica,
-    RegistroDeAula, Avaliacao, NotaAluno
+    RegistroDeAula, Avaliacao, NotaAluno, Tarefa, SubmissaoTarefa
 )
 from .serializers import (
     TurmaSerializer, AlunoSerializer, PlanejamentoAnualSerializer,
     UnidadeTematicaSerializer, RegistroDeAulaSerializer,
-    AvaliacaoSerializer, NotaAlunoSerializer
+    AvaliacaoSerializer, NotaAlunoSerializer, TarefaSerializer, SubmissaoTarefaSerializer
 )
 
 logger = logging.getLogger(__name__) # NOVO
@@ -157,3 +158,58 @@ class NotaAlunoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['aluno', 'avaliacao']
+
+
+class TarefaViewSet(viewsets.ModelViewSet):
+    """ViewSet for Tarefa model (estilo Google Classroom)."""
+    queryset = Tarefa.objects.all()
+    serializer_class = TarefaSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['turma', 'status', 'professor']
+    search_fields = ['titulo', 'descricao']
+    ordering_fields = ['-created_at', 'data_entrega']
+
+    def perform_create(self, serializer):
+        """Define o professor como o usuário logado."""
+        serializer.save(professor=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def publicar(self, request, pk=None):
+        """Publica a tarefa."""
+        tarefa = self.get_object()
+        tarefa.status = 'publicada'
+        tarefa.save()
+        serializer = self.get_serializer(tarefa)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def fechar(self, request, pk=None):
+        """Fecha a tarefa para novas submissões."""
+        tarefa = self.get_object()
+        tarefa.status = 'fechada'
+        tarefa.save()
+        serializer = self.get_serializer(tarefa)
+        return Response(serializer.data)
+
+
+class SubmissaoTarefaViewSet(viewsets.ModelViewSet):
+    """ViewSet for SubmissaoTarefa model."""
+    queryset = SubmissaoTarefa.objects.all()
+    serializer_class = SubmissaoTarefaSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_fields = ['tarefa', 'aluno', 'status']
+    ordering_fields = ['-data_submissao', '-data_avaliacao']
+
+    @action(detail=True, methods=['post'])
+    def avaliar(self, request, pk=None):
+        """Avalia a submissão."""
+        submissao = self.get_object()
+        submissao.nota = request.data.get('nota')
+        submissao.feedback_professor = request.data.get('feedback', '')
+        submissao.status = 'avaliada'
+        submissao.data_avaliacao = timezone.now()
+        submissao.save()
+        serializer = self.get_serializer(submissao)
+        return Response(serializer.data)

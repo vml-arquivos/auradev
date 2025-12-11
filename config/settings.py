@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.pedagogico',
     'apps.administrativo',
+    'apps.planejamentos',
     'apps.auramind',
 ]
 
