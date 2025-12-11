@@ -1,0 +1,1 @@
+# AuraMind Application - IA Integration

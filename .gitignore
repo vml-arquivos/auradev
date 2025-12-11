@@ -1,0 +1,126 @@
+# Python & Virtual Environment
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+venv/
+ENV/
+env/
+.venv/
+.env
+.env.local
+.env.*.local
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+/static_collected
+.django_db_migrations_pending
+
+# IDE & Editor Configuration
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.AppleDouble
+.LSOverride
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
+*.iml
+
+# Segurança & Credenciais
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der
+*.jks
+secrets.json
+credentials.json
+.aws/
+.ssh/
+
+# n8n (Automação)
+n8n/
+n8n_data/
+.n8n/
+
+# Testes & Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+*.cover
+
+# Dependências Locais
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Arquivos de Sistema
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+*.swp
+
+# Cache
+.cache/
+*.cache
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Arquivos Gerados
+*.mo
+*.pot
+.webassets-cache
+instance/
+.scrapy
+docs/_build/
+target/
+.ipynb_checkpoints
+.pytype/
+.mypy_cache/
+
+# Arquivos de Dados Sensíveis
+data/
+uploads/
+exports/
+temp/
+tmp/
