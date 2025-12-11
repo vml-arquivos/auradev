@@ -1,6 +1,8 @@
-"""
-Views for Pedagogico app.
-"""
+"""Views for Pedagogico app."""
+import requests # NOVO
+import logging # NOVO
+from django.conf import settings # NOVO
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -17,6 +19,35 @@ from .serializers import (
     UnidadeTematicaSerializer, RegistroDeAulaSerializer,
     AvaliacaoSerializer, NotaAlunoSerializer
 )
+
+logger = logging.getLogger(__name__) # NOVO
+
+
+def send_n8n_webhook(plano_id, professor_id, status_novo):
+    """Função auxiliar para disparar o webhook do n8n para aprovação de planos."""
+    # O Webhook Trigger deve ser configurado no n8n conforme docs/N8N_SETUP.md
+    webhook_url = settings.N8N_WEBHOOK_URL
+    plano_pendente_webhook_url = f"{webhook_url}auraclass/plano-pendente" 
+    
+    payload = {
+        "plano_id": plano_id,
+        "professor_id": professor_id,
+        "status": status_novo
+    }
+    
+    headers = {
+        'Content-Type': 'application/json',
+        # Em produção, adicionar o N8N_API_KEY no header de autenticação, se necessário
+    }
+    
+    try:
+        response = requests.post(plano_pendente_webhook_url, json=payload, headers=headers, timeout=5)
+        response.raise_for_status()
+        logger.info(f"Webhook n8n disparado com sucesso para Plano {plano_id}.")
+        return True
+    except requests.RequestException as e:
+        logger.error(f"Falha ao disparar webhook n8n para Plano {plano_id}: {e}")
+        return False
 
 
 class TurmaViewSet(viewsets.ModelViewSet):
@@ -50,13 +81,23 @@ class PlanejamentoAnualViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def submit(self, request, pk=None):
-        """Submit planejamento for approval."""
+        """Submit planejamento for approval and trigger n8n webhook."""
         planejamento = self.get_object()
-        planejamento.status = 'pendente'
-        planejamento.save()
+        
+        # Só muda e dispara se não estiver pendente (evita repetição)
+        if planejamento.status != 'pendente':
+            planejamento.status = 'pendente'
+            planejamento.save()
+            
+            # Dispara o webhook n8n para iniciar o fluxo de aprovação
+            send_n8n_webhook(
+                plano_id=planejamento.id,
+                professor_id=planejamento.professor.id,
+                status_novo='pendente'
+            )
         
         serializer = self.get_serializer(planejamento)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):

@@ -2,7 +2,13 @@
 Admin configuration for Administrativo app.
 """
 from django.contrib import admin
-from .models import Matricula, Funcionario, Financeiro, Documento
+from .models import Escola, Matricula, Funcionario, Financeiro, Documento
+
+
+@admin.register(Escola)
+class EscolaAdmin(admin.ModelAdmin):
+    list_display = ['nome', 'cnpj', 'diretor']
+    search_fields = ['nome', 'cnpj']
 
 
 @admin.register(Matricula)

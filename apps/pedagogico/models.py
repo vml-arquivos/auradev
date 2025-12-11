@@ -4,12 +4,22 @@ Models for Pedagogico app.
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from apps.core.models import User
+from apps.administrativo.models import Escola # NOVO: Importar Escola
 
 
 class Turma(models.Model):
     """
     Model for Class/Grade.
     """
+    # NOVO CAMPO: Liga a Turma a uma Escola
+    escola = models.ForeignKey(
+        Escola,
+        on_delete=models.CASCADE,
+        related_name='turmas',
+        verbose_name=_('Escola'),
+        default=1 # Requer valor padrão temporário para migração. Deve ser revisado manualmente.
+    )
+    
     nome = models.CharField(max_length=100, verbose_name=_('Nome'))
     nivel_ensino = models.CharField(
         max_length=50,
@@ -52,7 +62,8 @@ class Turma(models.Model):
         verbose_name = _('Turma')
         verbose_name_plural = _('Turmas')
         ordering = ['nivel_ensino', 'nome']
-        unique_together = ['nome', 'ano_letivo', 'semestre']
+        # UNIQUE_TOGETHER ATUALIZADO para incluir a Escola
+        unique_together = ['escola', 'nome', 'ano_letivo', 'semestre'] 
     
     def __str__(self):
         return f"{self.nome} - {self.ano_letivo}"

@@ -6,6 +6,32 @@ from django.utils.translation import gettext_lazy as _
 from apps.core.models import User
 
 
+class Escola(models.Model):
+    """
+    Model for School Unit. Permite a gestão de múltiplas unidades escolares.
+    """
+    nome = models.CharField(max_length=255, unique=True, verbose_name=_('Nome da Escola'))
+    cnpj = models.CharField(max_length=18, unique=True, verbose_name=_('CNPJ'))
+    endereco = models.CharField(max_length=255, blank=True, verbose_name=_('Endereço'))
+    diretor = models.OneToOneField(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='escola_direcao',
+        verbose_name=_('Diretor(a)')
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Criado em'))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_('Atualizado em'))
+
+    class Meta:
+        verbose_name = _('Escola')
+        verbose_name_plural = _('Escolas')
+
+    def __str__(self):
+        return self.nome
+
+
 class Matricula(models.Model):
     """
     Model for Student Enrollment.
@@ -16,6 +42,15 @@ class Matricula(models.Model):
         ('cancelada', _('Cancelada')),
         ('concluida', _('Concluída')),
     ]
+    
+    # NOVO CAMPO: Liga a Matrícula a uma Escola
+    escola = models.ForeignKey(
+        Escola,
+        on_delete=models.CASCADE,
+        related_name='matriculas',
+        verbose_name=_('Escola'),
+        default=1 # Requer valor padrão temporário para migração. Deve ser revisado manualmente.
+    )
     
     aluno = models.ForeignKey(
         User,
@@ -62,6 +97,15 @@ class Funcionario(models.Model):
         ('secretario', _('Secretário')),
         ('auxiliar', _('Auxiliar')),
     ]
+    
+    # NOVO CAMPO: Liga o Funcionário a uma Escola
+    escola = models.ForeignKey(
+        Escola,
+        on_delete=models.CASCADE,
+        related_name='funcionarios',
+        verbose_name=_('Escola'),
+        default=1 # Requer valor padrão temporário para migração. Deve ser revisado manualmente.
+    )
     
     user = models.OneToOneField(
         User,

@@ -6,11 +6,20 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 
-from .models import Matricula, Funcionario, Financeiro, Documento
+from .models import Escola, Matricula, Funcionario, Financeiro, Documento
 from .serializers import (
-    MatriculaSerializer, FuncionarioSerializer,
+    EscolaSerializer, MatriculaSerializer, FuncionarioSerializer,
     FinanceiroSerializer, DocumentoSerializer
 )
+
+
+class EscolaViewSet(viewsets.ModelViewSet):
+    """ViewSet for Escola model."""
+    queryset = Escola.objects.all()
+    serializer_class = EscolaSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    search_fields = ['nome', 'cnpj']
 
 
 class MatriculaViewSet(viewsets.ModelViewSet):

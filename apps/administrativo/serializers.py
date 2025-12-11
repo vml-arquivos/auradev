@@ -1,8 +1,17 @@
-"""
-Serializers for Administrativo app.
-"""
+"""Serializers for Administrativo app."""
 from rest_framework import serializers
-from .models import Matricula, Funcionario, Financeiro, Documento
+from .models import Escola, Matricula, Funcionario, Financeiro, Documento
+
+
+class EscolaSerializer(serializers.ModelSerializer):
+    """Serializer for Escola model."""
+    class Meta:
+        model = Escola
+        fields = [
+            'id', 'nome', 'cnpj', 'endereco', 'diretor',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
 
 
 class MatriculaSerializer(serializers.ModelSerializer):
@@ -10,10 +19,10 @@ class MatriculaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Matricula
         fields = [
-            'id', 'aluno', 'numero_matricula', 'data_matricula',
+            'id', 'escola', 'aluno', 'numero_matricula', 'data_matricula',
             'status', 'ano_letivo', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'data_matricula', 'created_at', 'updated_at']
 
 
 class FuncionarioSerializer(serializers.ModelSerializer):
@@ -21,7 +30,7 @@ class FuncionarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Funcionario
         fields = [
-            'id', 'user', 'matricula_funcional', 'cargo',
+            'id', 'escola', 'user', 'matricula_funcional', 'cargo',
             'data_admissao', 'salario', 'departamento',
             'created_at', 'updated_at'
         ]
