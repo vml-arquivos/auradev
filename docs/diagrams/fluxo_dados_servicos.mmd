@@ -1,0 +1,63 @@
+graph LR
+    subgraph "Django (Port 8000)"
+        A["API REST<br/>Endpoints"]
+        B["Database<br/>PostgreSQL"]
+        C["Webhook<br/>Handler"]
+    end
+
+    subgraph "AuraMind (Port 8001)"
+        D["FastAPI<br/>Endpoints"]
+        E["LLM<br/>Processing"]
+        F["Response<br/>Generator"]
+    end
+
+    subgraph "n8n (Port 5678)"
+        G["Webhook<br/>Trigger"]
+        H["HTTP<br/>Requests"]
+        I["Email<br/>Sender"]
+        J["Wait<br/>Handler"]
+    end
+
+    subgraph "External Services"
+        K["SMTP<br/>Server"]
+        L["WhatsApp<br/>API"]
+        M["Google<br/>Drive"]
+    end
+
+    %% Django Internal
+    A -->|Read/Write| B
+    C -->|Trigger| A
+
+    %% AuraMind Internal
+    D -->|Process| E
+    E -->|Generate| F
+    F -->|Return| D
+
+    %% n8n Workflow
+    G -->|Receive| H
+    H -->|Call| A
+    H -->|Call| D
+    H -->|Compose| I
+    J -->|Wait| H
+
+    %% External
+    I -->|Send| K
+    H -->|API Call| L
+    H -->|API Call| M
+
+    %% Inter-service Communication
+    A -->|POST /webhook/| G
+    A -->|GET /api/v1/auramind/| D
+    H -->|GET /pedagogico/| A
+    H -->|POST /api/v1/auramind/| D
+
+    %% Styling
+    classDef django fill:#e8f5e9,stroke:#2e7d32,stroke-width:3px,color:#000
+    classDef auramind fill:#f3e5f5,stroke:#6a1b9a,stroke-width:3px,color:#000
+    classDef n8n fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    classDef external fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
+
+    class A,B,C django
+    class D,E,F auramind
+    class G,H,I,J n8n
+    class K,L,M external

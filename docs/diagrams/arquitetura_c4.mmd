@@ -1,0 +1,88 @@
+graph TB
+    subgraph "Camada de Apresentação"
+        WEB["🌐 Interface Web<br/>React/Vue"]
+        MOBILE["📱 App Mobile<br/>iOS/Android"]
+    end
+
+    subgraph "Camada de API Gateway"
+        NGINX["⚙️ NGINX<br/>Reverse Proxy<br/>Port 80/443"]
+    end
+
+    subgraph "Camada de Serviços"
+        subgraph "Django (Port 8000)"
+            DJANGO["🐍 Django REST API<br/>- Auth JWT<br/>- CRUD Pedagógico<br/>- Webhook Handler"]
+            DB["🗄️ PostgreSQL<br/>Port 5432"]
+        end
+
+        subgraph "AuraMind (Port 8001)"
+            AURAMIND["🤖 FastAPI LLM Agent<br/>- Sugestões<br/>- Análises<br/>- Scoring"]
+            CACHE["💾 Cache Redis<br/>Opcional"]
+        end
+
+        subgraph "n8n (Port 5678)"
+            N8N["⚙️ n8n Automation<br/>- Webhooks<br/>- Workflows<br/>- Integrações"]
+            N8N_DB["🗄️ n8n DB<br/>SQLite/PostgreSQL"]
+        end
+    end
+
+    subgraph "Camada de Integrações Externas"
+        GMAIL["📧 Gmail SMTP"]
+        WHATSAPP["💬 WhatsApp API"]
+        GDRIVE["☁️ Google Drive"]
+        SLACK["💼 Slack"]
+    end
+
+    subgraph "Camada de Infraestrutura"
+        DOCKER["🐳 Docker Compose<br/>- Orquestração<br/>- Networking<br/>- Volumes"]
+        LOGS["📊 Logs & Monitoring<br/>ELK Stack"]
+    end
+
+    %% Conexões Camada de Apresentação
+    WEB -->|HTTP/HTTPS| NGINX
+    MOBILE -->|HTTP/HTTPS| NGINX
+
+    %% Conexões API Gateway
+    NGINX -->|8000| DJANGO
+    NGINX -->|8001| AURAMIND
+    NGINX -->|5678| N8N
+
+    %% Conexões Django
+    DJANGO -->|SQL| DB
+    DJANGO -->|Webhook| N8N
+    DJANGO -->|HTTP| AURAMIND
+
+    %% Conexões AuraMind
+    AURAMIND -->|Cache| CACHE
+    AURAMIND -->|HTTP| DJANGO
+
+    %% Conexões n8n
+    N8N -->|SQL| N8N_DB
+    N8N -->|HTTP| DJANGO
+    N8N -->|HTTP| AURAMIND
+    N8N -->|SMTP| GMAIL
+    N8N -->|API| WHATSAPP
+    N8N -->|API| GDRIVE
+    N8N -->|API| SLACK
+
+    %% Conexões Infraestrutura
+    DJANGO -->|Logs| LOGS
+    AURAMIND -->|Logs| LOGS
+    N8N -->|Logs| LOGS
+    DOCKER -->|Gerencia| DJANGO
+    DOCKER -->|Gerencia| AURAMIND
+    DOCKER -->|Gerencia| N8N
+
+    %% Estilos
+    classDef presentation fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef gateway fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef service fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef database fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef external fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef infra fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+
+    class WEB,MOBILE presentation
+    class NGINX gateway
+    class DJANGO,AURAMIND,N8N service
+    class DB,CACHE,N8N_DB database
+    class GMAIL,WHATSAPP,GDRIVE,SLACK external
+    class DOCKER,LOGS infra

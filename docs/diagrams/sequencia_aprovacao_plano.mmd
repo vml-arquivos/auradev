@@ -1,0 +1,63 @@
+sequenceDiagram
+    participant Prof as 👨‍🏫 Professor
+    participant Django as 🐍 Django<br/>Port 8000
+    participant N8N as ⚙️ n8n<br/>Port 5678
+    participant AuraMind as 🤖 AuraMind<br/>Port 8001
+    participant Coord as 👩‍💼 Coordenador
+    participant Email as 📧 SMTP
+
+    Prof->>Django: 1. POST /pedagogico/planejamentos/<br/>{...plano_data}
+    activate Django
+    Django->>Django: Valida dados<br/>Status = 'pendente'
+    Django->>Django: Salva no DB
+    deactivate Django
+    
+    Django->>N8N: 2. POST /webhook/auraclass/<br/>plano-pendente<br/>{plano_id, professor_id}
+    activate N8N
+    Note over N8N: Node 1: Webhook Trigger
+
+    N8N->>Django: 3. GET /pedagogico/planejamentos/<br/>{plano_id}/
+    activate Django
+    Django->>Django: Busca plano completo
+    Django-->>N8N: Retorna plano JSON
+    deactivate Django
+    Note over N8N: Node 2: HTTP Request (Busca)
+
+    N8N->>AuraMind: 4. POST /api/v1/auramind/<br/>analise_plano/<br/>{titulo, nivel_ensino, ...}
+    activate AuraMind
+    AuraMind->>AuraMind: Processa com LLM<br/>Gera análise
+    AuraMind-->>N8N: Retorna AnaliseResposta<br/>{score, pontos_fortes, ...}
+    deactivate AuraMind
+    Note over N8N: Node 3: HTTP Request (AuraMind)
+
+    N8N->>Email: 5. Compõe email com<br/>resumo da IA
+    activate Email
+    Email->>Coord: Envia email para<br/>coordenador@escola.com
+    deactivate Email
+    Note over N8N: Node 4: Send Email
+
+    Note over N8N: Node 5: Wait for Webhook<br/>Aguarda ação do coordenador
+
+    Coord->>N8N: 6. Clica link no email<br/>GET /webhook/auraclass/<br/>acao-plano?plano_id=X&acao=aprovar
+    activate N8N
+
+    N8N->>Django: 7. POST /pedagogico/planejamentos/<br/>{plano_id}/approve/<br/>{status: 'aprovado'}
+    activate Django
+    Django->>Django: Atualiza status<br/>Status = 'aprovado'
+    Django-->>N8N: Retorna plano atualizado
+    deactivate Django
+    Note over N8N: Node 6: HTTP Request (Update)
+
+    N8N->>Email: 8. Compõe email final
+    activate Email
+    Email->>Prof: Envia resultado<br/>para professor@escola.com
+    deactivate Email
+    deactivate N8N
+    Note over N8N: Node 7: Send Email
+
+    Prof->>Django: 9. Visualiza plano<br/>Status = 'aprovado'
+    activate Django
+    Django-->>Prof: Exibe plano aprovado
+    deactivate Django
+
+    Note over Prof,Django: ✅ Fluxo Completo!
